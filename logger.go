@@ -11,22 +11,35 @@ import (
 	"syscall"
 )
 
+
+type LEVEL int
+
+const (
+	TRACE = iota
+	DEBUG
+	INFO
+	ERROR
+	PANIC
+	FATAL
+)
+
+
 type Log struct {
 	Level  string `yaml:"Level"`
 	Output string `yaml:"Output"`
 }
 
-var level = map[string]logrus.Level{
-	"trace": logrus.TraceLevel,
-	"debug": logrus.DebugLevel,
-	"info":  logrus.InfoLevel,
-	"error": logrus.ErrorLevel,
-	"panic": logrus.PanicLevel,
-	"fatal": logrus.FatalLevel,
+var level = map[LEVEL]logrus.Level{
+	TRACE: logrus.TraceLevel,
+	DEBUG: logrus.DebugLevel,
+	INFO:  logrus.InfoLevel,
+	ERROR: logrus.ErrorLevel,
+	PANIC: logrus.PanicLevel,
+	FATAL: logrus.FatalLevel,
 }
 
 type Option struct {
-	level string
+	level LEVEL 
 	path  string
 }
 
@@ -43,7 +56,7 @@ type Logger struct {
 
 var logWriter *lumberjack.Logger
 
-func SetOption(level, path string) {
+func SetOption(level LEVEL, path string) {
 
 	option.level = level
 	option.path = path
@@ -60,15 +73,6 @@ func SetOption(level, path string) {
 		// 是否需要压缩滚动日志, 使用的 gzip 压缩
 		Compress: false, // disabled by default
 	}
-
-	stdout, err := os.OpenFile(path+".out", os.O_WRONLY|os.O_CREATE|os.O_APPEND|os.O_SYNC, 0664)
-	if err != nil {
-		fmt.Printf("create stdout %s err:%s", path+".out", err)
-	}
-
-	syscall.Dup2(int(stdout.Fd()), 1)
-	syscall.Dup2(int(stdout.Fd()), 2)
-
 }
 
 func (f *Logger) ErrorfEx(ctx context.Context, format string, args ...interface{}) error {
