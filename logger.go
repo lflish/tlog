@@ -9,7 +9,6 @@ import (
 	"sync"
 )
 
-
 type LEVEL int
 
 const (
@@ -20,7 +19,6 @@ const (
 	PANIC
 	FATAL
 )
-
 
 type Log struct {
 	Level  string `yaml:"Level"`
@@ -37,7 +35,7 @@ var level = map[LEVEL]logrus.Level{
 }
 
 type Option struct {
-	level LEVEL 
+	level LEVEL
 	path  string
 }
 
@@ -74,12 +72,28 @@ func SetOption(level LEVEL, path string) {
 }
 
 func (f *Logger) ErrorfEx(ctx context.Context, format string, args ...interface{}) error {
-	f.Errorf(ctx, format, args...)
+	f.ErrorF(ctx, format, args...)
 	return fmt.Errorf(format, args...)
 }
 
-func (f *Logger) Errorf(ctx context.Context, format string, args ...interface{}) {
-	f.Logger.Errorf(format, args...)
+func (f *Logger) ErrorF(ctx context.Context, format string, args ...interface{}) {
+	f.WithContext(ctx).Errorf(format, args...)
+}
+
+func (f *Logger) DebugF(ctx context.Context, format string, args ...interface{}) {
+	f.WithContext(ctx).Debugf(format, args...)
+}
+
+func (f *Logger) InfoF(ctx context.Context, format string, args ...interface{}) {
+	f.WithContext(ctx).Infof(format, args...)
+}
+
+func (f *Logger) PanicF(ctx context.Context, format string, args ...interface{}) {
+	f.WithContext(ctx).Panicf(format, args...)
+}
+
+func (f *Logger) FatalF(ctx context.Context, format string, args ...interface{}) {
+	f.WithContext(ctx).Fatalf(format, args...)
 }
 
 func (f *Logger) Format(entry *logrus.Entry) ([]byte, error) {
@@ -93,7 +107,8 @@ func (f *Logger) Format(entry *logrus.Entry) ([]byte, error) {
 	timestamp := entry.Time.Format("2006-01-02 15:04:05")
 
 	var newLog string
-	newLog = fmt.Sprintf("%s [%s] [%s] %s\n", timestamp, entry.Level, f.mod, getTraceId(entry.Context), entry.Message)
+
+	newLog = fmt.Sprintf("%s [%s] [%s] [%s] %s\n", timestamp, entry.Level, f.mod, getTraceId(entry.Context), entry.Message)
 
 	b.WriteString(newLog)
 	return b.Bytes(), nil

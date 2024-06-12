@@ -13,10 +13,14 @@ func newTraceID() string {
 }
 
 func NewTraceIdCtx() context.Context {
-	return context.WithValue(context.Background(), TraceID, newTraceID())
+	return context.WithValue(context.Background(), TraceID, newTraceID()[0:10])
 }
 
 func getTraceId(ctx context.Context) string {
+	if ctx == nil {
+		return "nil"
+	}
+
 	v, ok := ctx.Value(TraceID).(string)
 	if !ok {
 		return ""
