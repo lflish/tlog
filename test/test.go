@@ -20,7 +20,7 @@ func main() {
 
 	for i := 0; i < 10000; i++ {
 		go func(i int) {
-			ctx := tlog.NewTraceIdCtx()
+			ctx := tlog.NewTraceIdCtx("")
 			logT1.DebugF(ctx, "%d", i)
 			logT1.InfoF(ctx, "%d", i)
 			logT1.ErrorF(ctx, "%d", i)
@@ -29,7 +29,7 @@ func main() {
 
 	go func() {
 		for i := 10000; true; i++ {
-			ctx := tlog.NewTraceIdCtx()
+			ctx := tlog.NewTraceIdCtx("")
 			logT2.DebugF(ctx, "%d", i)
 			logT2.InfoF(ctx, "%d", i)
 		}

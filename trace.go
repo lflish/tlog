@@ -12,8 +12,11 @@ func newTraceID() string {
 	return strings.Replace(uuid.New().String(), "-", "", -1)
 }
 
-func NewTraceIdCtx() context.Context {
-	return context.WithValue(context.Background(), TraceID, newTraceID()[0:10])
+func NewTraceIdCtx(id string) context.Context {
+	if id == "" {
+		return context.WithValue(context.Background(), TraceID, newTraceID())
+	}
+	return context.WithValue(context.Background(), TraceID, newTraceID())
 }
 
 func getTraceId(ctx context.Context) string {
