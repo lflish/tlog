@@ -5,18 +5,12 @@ import (
 	"tlog"
 )
 
-var logT1 *tlog.Logger
-var logT2 *tlog.Logger
-
-func init() {
-	tlog.SetOption(tlog.DEBUG, "./traceid.log")
-	//tlog.SetOption(tlog.DEBUG, "")
-
-	logT1 = tlog.GetLogger("test1")
-	logT2 = tlog.GetLogger("test2")
-}
+var logT1 = tlog.GetLogger("test1")
+var logT2 = tlog.GetLogger("test2")
 
 func main() {
+
+	tlog.SetOption(tlog.DEBUG, "./traceid.log")
 
 	for i := 0; i < 10000; i++ {
 		go func(i int) {

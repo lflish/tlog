@@ -69,6 +69,15 @@ func SetOption(level LEVEL, path string) {
 		// 是否需要压缩滚动日志, 使用的 gzip 压缩
 		Compress: false, // disabled by default
 	}
+
+	loggersMu.Lock()
+	defer loggersMu.Unlock()
+
+	for _, v := range loggers {
+		v.SetOutput(logWriter)
+		v.Logger.SetFormatter(v)
+		v.SetLevel(option.Level())
+	}
 }
 
 func (f *Logger) ErrorfEx(ctx context.Context, format string, args ...interface{}) error {
@@ -120,6 +129,7 @@ var loggers = map[string]*Logger{}
 
 func GetLogger(mod string) *Logger {
 	loggersMu.Lock()
+	defer loggersMu.Unlock()
 
 	l, ok := loggers[mod]
 	if !ok {
@@ -127,17 +137,8 @@ func GetLogger(mod string) *Logger {
 			mod:    mod,
 			Logger: logrus.New(),
 		}
-
-		if option.path != "" {
-			l.SetOutput(logWriter) //调用 logrus 的 SetOutput()函数
-		}
-
-		l.Logger.SetFormatter(l)
-		l.SetLevel(option.Level())
-
 		loggers[mod] = l
 	}
-	loggersMu.Unlock()
 
 	return l
 }
