@@ -1,4 +1,4 @@
-package tlog
+package pailog
 
 import (
 	"bytes"
@@ -58,8 +58,6 @@ func SetOption(level LEVEL, path string) {
 	option.path = path
 
 	logWriter = &lumberjack.Logger{
-		// 日志输出文件路径
-		Filename: option.path,
 		// 日志文件最大 size, 单位是 MB
 		MaxSize: 500, // megabytes
 		// 最大过期日志保留的个数
@@ -73,6 +71,10 @@ func SetOption(level LEVEL, path string) {
 	loggersMu.Lock()
 	defer loggersMu.Unlock()
 
+	if option.path != "" {
+		logWriter.Filename = option.path
+	}
+
 	for _, v := range loggers {
 		v.SetOutput(logWriter)
 		v.Logger.SetFormatter(v)
@@ -80,6 +82,7 @@ func SetOption(level LEVEL, path string) {
 	}
 }
 
+/****************** ctx ********************************/
 func (f *Logger) ErrorfEx(ctx context.Context, format string, args ...interface{}) error {
 	f.ErrorF(ctx, format, args...)
 	return fmt.Errorf(format, args...)
@@ -105,6 +108,28 @@ func (f *Logger) FatalF(ctx context.Context, format string, args ...interface{})
 	f.WithContext(ctx).Fatalf(format, args...)
 }
 
+/**********************************************/
+/*
+func (f *Logger) Errorf(format string, args ...interface{}) {
+	f.Errorf(format, args...)
+}
+
+func (f *Logger) Debugf(format string, args ...interface{}) {
+	f.Debugf(format, args...)
+}
+
+func (f *Logger) Infof(format string, args ...interface{}) {
+	f.Infof(format, args...)
+}
+
+func (f *Logger) Panicf(format string, args ...interface{}) {
+	f.Panicf(format, args...)
+}
+
+func (f *Logger) Fatalf(format string, args ...interface{}) {
+	f.Fatalf(format, args...)
+}*/
+
 func (f *Logger) Format(entry *logrus.Entry) ([]byte, error) {
 	var b *bytes.Buffer
 	if entry.Buffer != nil {
@@ -117,9 +142,16 @@ func (f *Logger) Format(entry *logrus.Entry) ([]byte, error) {
 
 	var newLog string
 
-	newLog = fmt.Sprintf("%s [%s] [%s] [%s] %s\n", timestamp, entry.Level, f.mod, getTraceId(entry.Context), entry.Message)
+	if logWriter.Filename == "" {
+		fmt.Printf("%s [%s] [%s] [%s] %s\n", timestamp, entry.Level, f.mod, getTraceId(entry.Context), entry.Message)
+	} else if getTraceId(entry.Context) == "nil" {
+		newLog = fmt.Sprintf("%s [%s] [%s] %s\n", timestamp, entry.Level, f.mod, entry.Message)
+		b.WriteString(newLog)
+	} else {
+		newLog = fmt.Sprintf("%s [%s] [%s] [%s] %s\n", timestamp, entry.Level, f.mod, getTraceId(entry.Context), entry.Message)
+		b.WriteString(newLog)
+	}
 
-	b.WriteString(newLog)
 	return b.Bytes(), nil
 }
 

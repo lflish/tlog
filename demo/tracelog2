@@ -1,0 +1,9 @@
+2024-08-23 15:18:54 [debug] [tracelog2] [123] debug log
+2024-08-23 15:18:54 [info] [tracelog2] [123] info log
+2024-08-23 15:18:54 [error] [tracelog2] [123] error log
+2024-08-23 15:18:54 [debug] [tracelog2] [123-456] debug log
+2024-08-23 15:18:54 [info] [tracelog2] [123-456] info log
+2024-08-23 15:18:54 [error] [tracelog2] [123-456] error log
+2024-08-23 15:18:54 [debug] [tracelog2] [123-456-789] debug log
+2024-08-23 15:18:54 [info] [tracelog2] [123-456-789] info log
+2024-08-23 15:18:54 [error] [tracelog2] [123-456-789] error log
