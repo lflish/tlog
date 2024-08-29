@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"github.com/sirupsen/logrus"
 	"gopkg.in/natefinch/lumberjack.v2"
+	"path/filepath"
 	"sync"
 )
 
@@ -79,6 +80,7 @@ func SetOption(level LEVEL, path string) {
 		v.SetOutput(logWriter)
 		v.Logger.SetFormatter(v)
 		v.SetLevel(option.Level())
+		v.SetReportCaller(true)
 	}
 }
 
@@ -142,14 +144,27 @@ func (f *Logger) Format(entry *logrus.Entry) ([]byte, error) {
 
 	var newLog string
 
-	if logWriter.Filename == "" {
-		fmt.Printf("%s [%s] [%s] [%s] %s\n", timestamp, entry.Level, f.mod, getTraceId(entry.Context), entry.Message)
-	} else if getTraceId(entry.Context) == "nil" {
-		newLog = fmt.Sprintf("%s [%s] [%s] %s\n", timestamp, entry.Level, f.mod, entry.Message)
-		b.WriteString(newLog)
+	if entry.HasCaller() {
+		fileName := filepath.Base(entry.Caller.File)
+		if logWriter.Filename == "" {
+			fmt.Printf("%s [%s] [%s:%d] [%s] [%s] %s\n", timestamp, entry.Level, fileName, entry.Caller.Line, f.mod, getTraceId(entry.Context), entry.Message)
+		} else if getTraceId(entry.Context) == "nil" {
+			newLog = fmt.Sprintf("%s [%s] [%s:%d] [%s] %s\n", timestamp, entry.Level, fileName, entry.Caller.Line, f.mod, entry.Message)
+			b.WriteString(newLog)
+		} else {
+			newLog = fmt.Sprintf("%s [%s] [%s:%d] [%s] [%s] %s\n", timestamp, entry.Level, fileName, entry.Caller.Line, f.mod, getTraceId(entry.Context), entry.Message)
+			b.WriteString(newLog)
+		}
 	} else {
-		newLog = fmt.Sprintf("%s [%s] [%s] [%s] %s\n", timestamp, entry.Level, f.mod, getTraceId(entry.Context), entry.Message)
-		b.WriteString(newLog)
+		if logWriter.Filename == "" {
+			fmt.Printf("%s [%s] [%s] [%s] %s\n", timestamp, entry.Level, f.mod, getTraceId(entry.Context), entry.Message)
+		} else if getTraceId(entry.Context) == "nil" {
+			newLog = fmt.Sprintf("%s [%s] [%s] %s\n", timestamp, entry.Level, f.mod, entry.Message)
+			b.WriteString(newLog)
+		} else {
+			newLog = fmt.Sprintf("%s [%s] [%s] [%s] %s\n", timestamp, entry.Level, f.mod, getTraceId(entry.Context), entry.Message)
+			b.WriteString(newLog)
+		}
 	}
 
 	return b.Bytes(), nil
